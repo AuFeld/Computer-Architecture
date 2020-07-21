@@ -2,12 +2,27 @@
 
 import sys
 
+''' Operands ''' 
+
+HLT = 0b00000001
+LDI = 0b10000010
+PRN = 0b01000111
+
+
 class CPU:
     """Main CPU class."""
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0b00000000] * 256
+        self.reg = [0b00000000] * 8
+        self.PC = 0
+
+    def ram_read(self, address):
+        return self.ram[address]
+    
+    def ram_write(self, value, address):
+        seld.ram[address] = value
 
     def load(self):
         """Load a program into memory."""
@@ -47,12 +62,12 @@ class CPU:
         """
 
         print(f"TRACE: %02X | %02X %02X %02X |" % (
-            self.pc,
+            self.PC,
             #self.fl,
             #self.ie,
-            self.ram_read(self.pc),
-            self.ram_read(self.pc + 1),
-            self.ram_read(self.pc + 2)
+            self.ram_read(self.PC),
+            self.ram_read(self.PC + 1),
+            self.ram_read(self.PC + 2)
         ), end='')
 
         for i in range(8):
@@ -62,4 +77,31 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        # set running to true
+        running = True
+
+        self.IR = self.ram_read(self.PC)
+        operand_a = self.ram_read(self.PC + 1)
+        operand_b = self.ram_read(self.PC + 2)
+
+        while running:
+            # set value of register to an integer
+            if self.IR == LDI:
+                self.reg[operand_a] = operand_b
+                self.PC += 3
+            # print numeric value stored in given register
+            elif self.IR == PRN:
+                print(self.reg[operand_a])
+                self.PC += 2
+            # halt the CPU and exit the emulator
+            elif self.IR == HLT:
+                running = False
+                self.PC += 1
+            
+        else:
+            print(f'Unknown instruction {self.IR} at address {self.PC}')
+            sys.exit(1)
+
+        self.IR = self.ram_read(self.PC)
+        operand_a = self.ram_read(self.PC + 1)
+        operand_b = self.ram_read(self.PC + 2)
