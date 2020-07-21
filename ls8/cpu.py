@@ -4,9 +4,14 @@ import sys
 
 ''' Operands ''' 
 
-HLT = 0b00000001 # halt the cpu and exit the emulator
-LDI = 0b10000010 # load 'immediate', store a value in register
-PRN = 0b01000111 # prints the numeric value stored in a register
+# halt the cpu and exit the emulator
+HLT = 0b00000001 
+
+# load 'immediate', store a value in register
+LDI = 0b10000010 
+
+# prints the numeric value stored in a register
+PRN = 0b01000111 
 
 
 class CPU:
