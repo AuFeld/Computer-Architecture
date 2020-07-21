@@ -4,9 +4,9 @@ import sys
 
 ''' Operands ''' 
 
-HLT = 0b00000001
-LDI = 0b10000010
-PRN = 0b01000111
+HLT = 0b00000001 # halt the cpu and exit the emulator
+LDI = 0b10000010 # load 'immediate', store a value in register
+PRN = 0b01000111 # prints the numeric value stored in a register
 
 
 class CPU:
@@ -14,15 +14,20 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
+        # Add list properties to the CPU class to hold 256 
+        # bytes of memory and 8 general purpose registers
+        
         self.ram = [0b00000000] * 256
         self.reg = [0b00000000] * 8
         self.PC = 0
 
+    # add ram methods - read() and write() - that access the
+    # RAM inside the CPU object
     def ram_read(self, address):
         return self.ram[address]
     
     def ram_write(self, value, address):
-        seld.ram[address] = value
+        self.ram[address] = value
 
     def load(self):
         """Load a program into memory."""
@@ -77,6 +82,10 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+        ''' implement the core of the cpu's run() mentod
+        reads the memory address that's stored in the
+        register PC, and store the result in IR (instrction
+        register) '''
         # set running to true
         running = True
 
@@ -85,14 +94,17 @@ class CPU:
         operand_b = self.ram_read(self.PC + 2)
 
         while running:
+            # add the LDI instruction
             # set value of register to an integer
             if self.IR == LDI:
                 self.reg[operand_a] = operand_b
                 self.PC += 3
+            # add PRN instruction
             # print numeric value stored in given register
             elif self.IR == PRN:
                 print(self.reg[operand_a])
                 self.PC += 2
+            # implement the HLT instruction handler.
             # halt the CPU and exit the emulator
             elif self.IR == HLT:
                 running = False

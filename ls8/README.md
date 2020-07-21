@@ -60,8 +60,28 @@ but you'll have to implement those three above instructions first!
 ## Step 0: IMPORTANT: inventory what is here!
 
 * Make a list of files here.
+  1. LS8-cheatsheet.md
+    - lists operands and their binary equivalents
+  2. FAQ.md
+    - random questions with answers surrounding computer architecture concepts
+  3. LS8-spec.md
+    - various details about operands, registers, memory, interrupts... 
+  4. LS8 (Project: the LS-8 Emulator)
+    - ls8.py
+      - instantiates a CPU object from cpu.py
+      - executes the load and run methods
+    - cpu.py
+      - defines a cpu class
 * Write a short 3-10-word description of what each file does.
 * Note what has been implemented, and what hasn't.
+  - Needs Implementation:
+    - cpu constructor init()
+    - HLT, LDI, PRN
+    - load() method
+    - multiply
+    - system stack
+    - CALL and RET instructions
+    - calls subroutine
 * Read this whole file.
 * Skim the spec.
 
