@@ -13,24 +13,28 @@ LDI = 0b10000010
 # prints the numeric value stored in a register
 PRN = 0b01000111 
 
+POP = 0b01000110
+PUSH = 0b01000101
+
 ADD = 0b10100000
 SUB = 0b10100001
 MUL = 0b10100010
 DIV = 0b10100011
+MOD = 0b10100100
 
-AND  = 0b10101000
-OR   = 0b10101010
-XOR  = 0b10101011
-NOT  = 0b01101001
+INC = 0b01100101
+DEC = 0b01100110
 
-SHL  = 0b10101100
-SHR  = 0b10101101
+CMP = 0b10100111
 
-INC  = 0b01100101
-DEC  = 0b01100110
-CMP  = 0b10100111
+AND = 0b10101000
+NOT = 0b01101001
+OR = 0b10101010
+XOR = 0b10101011
+SHL = 0b10101100
+SHR = 0b10101101
 
-
+SP = 7
 
 class CPU:
     """Main CPU class."""
@@ -40,43 +44,64 @@ class CPU:
         # Add list properties to the CPU class to hold 256 
         # bytes of memory and 8 general purpose registers
         
-        self.ram = [0b00000000] * 256
-        self.reg = [0b00000000] * 8
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.reg[SP] = 0xF4
+        
         self.PC = 0
-        self.flag = 0b00000000
+        self.FL = 0
+
         self.branch_table = {
+            HLT: self.hlt,
             LDI: self.ldi,
             PRN: self.prn,
-            HLT: self.hlt,
-            MUL: self.alu,
+            POP: self.pop,
+            PUSH: self.push,
+
             ADD: self.alu,
-            DIV: self.alu,
             SUB: self.alu,
-            AND: self.alu,
-            OR: self.alu,
-            XOR: self.alu,
-            NOT: self.alu,
-            SHL: self.alu,
-            SHR: self.alu,
+            MUL: self.alu,
+            DIV: self.alu,
+            MOD: self.alu,
+
             INC: self.alu,
             DEC: self.alu,
-            CMP: self.alu
+
+            CMP: self.alu,
+
+            AND: self.alu,
+            NOT: self.alu,
+            OR: self.alu,
+            XOR: self.alu,
+            SHL: self.alu,
+            SHR: self.alu
         }
+
     def ldi(self, op_a, op_b):
         self.reg[op_a] = op_b 
     
-    def prn(self, op_a, op_b):
+    def prn(self, op_a, op_b=None):
         print(self.reg[op_a])
-    
-    def hlt(self, op_a, op_b):
+
+    def hlt(self, op_a=None, op_b=None):
         sys.exit()
+
+    # add pop method
+    def pop(self, op_a, op_b=None):
+        self.reg[op_a] = self.ram_read(self.reg[SP])
+        self.reg[SP] += 1
+
+    # add push method
+    def push(self, op_a, op_b=None):
+        self.reg[SP] -= 1
+        self.ram_write(self.reg[SP], self.reg[op_a])
         
     # add ram methods - read() and write() - that access the
     # RAM inside the CPU object
     def ram_read(self, address):
         return self.ram[address]
     
-    def ram_write(self, value, address):
+    def ram_write(self, address, value):
         self.ram[address] = value
 
     def load(self, filename):
@@ -121,7 +146,9 @@ class CPU:
         elif op == MUL:
             self.reg[reg_a] *= self.reg[reg_b]
         elif op == DIV:
-            self.reg[reg_a] //= self.reg[reg_b]
+            self.reg[reg_a] /= self.reg[reg_b]
+        elif op == MOD:
+            self.reg[reg_a] %= self.reg[reg_b]
         elif op == AND:
             self.reg[reg_a] &= self.reg[reg_b]
         elif op == OR:
@@ -139,9 +166,9 @@ class CPU:
         elif op == DEC:
             self.reg[reg_a] -= 1
         elif op == CMP:
-            self.flag = ((self.reg[reg_a] < self.reg[reg_b]) << 2) | \
-                        ((self.reg[reg_a] > self.reg[reg_b]) << 1) | \
-                        ((self.reg[reg_a] == self.reg[reg_b]) << 0)
+            self.FL = ((self.reg[reg_a] < self.reg[reg_b]) << 2) | \
+                      ((self.reg[reg_a] > self.reg[reg_b]) << 1) | \
+                      ((self.reg[reg_a] == self.reg[reg_b]) << 0)
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -189,10 +216,10 @@ class CPU:
                 if ALU_operation:
                     self.branch_table[ir](ir, op_a, op_b)
                 else:
-                    self.brach_table[ir](op_a, op_b)
+                    self.branch_table[ir](op_a, op_b)
             else:
-                print('Unsupported Op')
-            
+                print('Unsupported operation')
+
             self.PC += num_operands + 1 # +1 for opcode
 
             '''
