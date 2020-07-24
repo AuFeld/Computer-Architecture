@@ -2,7 +2,7 @@
 
 import sys
 
-''' Opcodes ''' 
+''' Opcodes - Command Variables''' 
 
 # halt the cpu and exit the emulator
 HLT = 0b00000001 
@@ -15,6 +15,8 @@ PRN = 0b01000111
 
 POP = 0b01000110
 PUSH = 0b01000101
+CALL = 0b01010000
+RET = 0b00010001
 
 ADD = 0b10100000
 SUB = 0b10100001
@@ -57,6 +59,8 @@ class CPU:
             PRN: self.prn,
             POP: self.pop,
             PUSH: self.push,
+            CALL: self.call, 
+            RET: self.ret, 
 
             ADD: self.alu,
             SUB: self.alu,
@@ -78,30 +82,48 @@ class CPU:
         }
 
     def ldi(self, op_a, op_b):
+        ''' sets a specific register to a specific value '''
         self.reg[op_a] = op_b 
     
     def prn(self, op_a, op_b=None):
+        ''' prints a specific value '''
         print(self.reg[op_a])
 
     def hlt(self, op_a=None, op_b=None):
+        ''' halts the CPU and exits the emulator '''
         sys.exit()
 
-    # add pop method
     def pop(self, op_a, op_b=None):
+        ''' removes values from stack using arithmetic logic unit (ALU) '''
         self.reg[op_a] = self.ram_read(self.reg[SP])
         self.reg[SP] += 1
 
-    # add push method
     def push(self, op_a, op_b=None):
+        ''' adds values to stack using arithmetic logic unit (ALU) ''' 
         self.reg[SP] -= 1
         self.ram_write(self.reg[SP], self.reg[op_a])
-        
-    # add ram methods - read() and write() - that access the
-    # RAM inside the CPU object
+
+    def call(self, op_a, op_b=None):
+        ''' jumps to address ''' 
+        # push on the stack
+        self.reg[SP] -= 1
+        self.ram_write(self.reg[SP], self.PC + 2)
+        # set the program counter (PC) to the value in the given register
+        self.PC = self.reg[op_a]
+    
+    def ret(self, op_a=None, op_b=None):
+        ''' returns back to where it was called from '''
+        # pop return address from top of stack
+        # set the program counter (PC)
+        self.PC = self.ram_read(self.reg[SP])
+        self.reg[SP] += 1
+
     def ram_read(self, address):
+        ''' reads the CPU object in RAM ''' 
         return self.ram[address]
     
     def ram_write(self, address, value):
+        ''' writes the CPU object in RAM '''
         self.ram[address] = value
 
     def load(self, filename):
@@ -210,6 +232,8 @@ class CPU:
             # new bits on the right hand side are zeroes
             num_operands = ir >> 6
 
+            PC_set = (ir >> 4) & 1
+
             ALU_operation = (ir >> 5) & 1
 
             if ir in self.branch_table:
@@ -220,26 +244,5 @@ class CPU:
             else:
                 print('Unsupported operation')
 
-            self.PC += num_operands + 1 # +1 for opcode
-
-            '''
-            # add the LDI instruction
-            # set value of register to an integer
-            if self.IR == LDI:
-                self.reg[operand_a] = operand_b
-                self.PC += 3
-            # add PRN instruction
-            # print numeric value stored in given register
-            elif self.IR == PRN:
-                print(self.reg[operand_a])
-                self.PC += 2
-            # implement the HLT instruction handler.
-            # halt the CPU and exit the emulator
-            elif self.IR == HLT:
-                running = False
-                self.PC += 1
-            
-        else:
-            print(f'Unknown instruction {self.IR} at address {self.PC}')
-            sys.exit(1)
-            '''
+            if not PC_set:
+                self.PC += num_operands + 1 # +1 for opcode
